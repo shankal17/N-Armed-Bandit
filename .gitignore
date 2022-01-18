@@ -1,0 +1,8 @@
+# Byte-compiled / optimized
+__pycache__/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment
+venv/
