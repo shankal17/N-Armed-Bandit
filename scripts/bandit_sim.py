@@ -5,7 +5,7 @@ from tqdm import tqdm
 class NArmedBanditMachine():
     def __init__(self, num_actions):
         self.num_actions = num_actions
-        self.true_values = np.random.uniform(0, 1, num_actions)
+        self.true_values = np.random.normal(0, 1, num_actions)
         self.optimal_action_index = np.argmax(self.true_values)
     
     def take_action(self, action_idx):
