@@ -132,3 +132,64 @@ class EpsilonGreedyAgent(Agent):
         action_sample_val = action_result["action_sample_val"]
         self.action_counts[action_idx] += 1
         self.action_value_estimates[action_idx] += (action_sample_val - self.action_value_estimates[action_idx]) / self.action_counts[action_idx]
+
+class SoftmaxAgent(Agent):
+    """Agent with softmax policy selection
+    ...
+    
+    Attributes
+    ----------
+    temp : float
+        Temperature of softmax function
+    description : string
+        Description of agent function
+    
+    Methods
+    -------
+    choose_action()
+        Chooses an action to execute by softmax policy
+    update_value_estimates(action_result)
+        Updates the action value estimates from experience by averaging
+    """
+
+    def __init__(self, temp, description='Softmax Agent'):
+        """
+        Parameters
+        ----------
+        temp : float
+            Temperature of softmax function
+        description : string
+            Description of agent function
+        """
+
+        super().__init__(description)
+        self.temp = temp
+
+    def choose_action(self):
+        """Chooses an action to execute by softmax policy
+
+        Returns
+        -------
+        int
+            Index of the chosen action
+        """
+
+        softmax_numerator = np.exp(self.action_value_estimates/self.temp)
+        softmax_denominator = np.sum(softmax_numerator)
+        softmax = softmax_numerator / softmax_denominator
+
+        return np.random.choice(len(softmax_numerator), p=softmax)
+
+    def update_value_estimates(self, action_result):
+        """Updates the action value estimates from experience by averaging
+        
+        Parameters
+        ----------
+        action_result : dict
+            Result of bandit action
+        """
+
+        action_idx = action_result["action_idx"]
+        action_sample_val = action_result["action_sample_val"]
+        self.action_counts[action_idx] += 1
+        self.action_value_estimates[action_idx] += (action_sample_val - self.action_value_estimates[action_idx]) / self.action_counts[action_idx]
