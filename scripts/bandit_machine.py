@@ -44,7 +44,7 @@ class NArmedBanditMachine():
     def init_action_values(self):
         """Initializes the action distributions and finds the optimal action"""
 
-        self.true_values = np.random.normal(0, 2, self.num_actions)
+        self.true_values = np.random.normal(0, 1, self.num_actions)
         self.optimal_action_idx = np.argmax(self.true_values)
     
     def take_action(self, action_idx):
