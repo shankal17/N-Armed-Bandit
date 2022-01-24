@@ -5,8 +5,12 @@ Classes
 -------
 Agent(description)
     Base class for all agents
-EpsilonGreedyAgent(epsilon, description)
+EpsilonGreedyAgent(epsilon, initial_estimate, description)
     Agent with epsilon-greedy action selection policy
+SoftmaxAgent(temp, initial_estimate, description):
+    Agent with softmax policy selection
+UCBAgent(c, initial_estimate, description)
+    Agent with upper-confidence-bound policy selection
 """
 
 import numpy as np
@@ -57,7 +61,7 @@ class Agent():
         """
         
         self.action_value_estimates = self.initial_estimate*np.ones(bandit.num_actions)
-        self.action_counts = np.zeros_like(self.action_value_estimates)
+        self.action_counts = np.zeros_like(self.action_value_estimates, dtype=int)
 
     def choose_action(self):
         """Chooses an action to execute"""
@@ -206,14 +210,14 @@ class SoftmaxAgent(Agent):
         self.action_counts[action_idx] += 1
         self.action_value_estimates[action_idx] += (action_sample_val - self.action_value_estimates[action_idx]) / self.action_counts[action_idx]
 
-class PursuitAgent(Agent): #TODO: Implement pursuit agent
-    """Agent with "pursuit" policy selection
+class UCBAgent(Agent):
+    """Agent with upper-confidence-bound policy selection
     ...
     
     Attributes
     ----------
-    epsilon : float
-        Probability that a non-greedy action will be taken
+    c : float
+        Exploration constant
     initial_estimate : float
         Initial action-value estimate
     description : string
@@ -227,12 +231,12 @@ class PursuitAgent(Agent): #TODO: Implement pursuit agent
         Updates the action value estimates from experience by averaging
     """
 
-    def __init__(self, epsilon, initial_estimate=0, description='Epsilon Greedy'):
+    def __init__(self, c, initial_estimate=0, description='UCB Agent'):
         """
         Parameters
         ----------
-        epsilon : float
-            Probability that a non-greedy action will be taken
+        c : float
+            Exploration coefficient
         initial_estimate : float
             Initial action-value estimate
         description : string
@@ -240,7 +244,7 @@ class PursuitAgent(Agent): #TODO: Implement pursuit agent
         """
 
         super().__init__(initial_estimate, description)
-        self.epsilon = epsilon
+        self.c = c
 
     def choose_action(self):
         """Chooses an action to execute by epsilon-greedy policy
@@ -251,18 +255,13 @@ class PursuitAgent(Agent): #TODO: Implement pursuit agent
             Index of the chosen action
         """
 
-        optimal_action_idx = np.argmax(self.action_value_estimates)
-        if np.random.uniform() > self.epsilon:
-            # Exploit current knowledge
-            return optimal_action_idx
+        if int(0) in self.action_counts:
+            return np.argmin(np.abs(self.action_value_estimates))
         else:
-            # Explore other options
-            non_optimal_choice_idxs = np.arange(len(self.action_value_estimates))
-            mask = np.ones(len(non_optimal_choice_idxs), dtype=bool)
-            mask[[optimal_action_idx]] = False
-            non_optimal_choice_idxs = non_optimal_choice_idxs[mask]
-            action_idx = np.random.choice(non_optimal_choice_idxs)
-            return action_idx
+            t = np.sum(self.action_counts)
+            argmax_arg = self.c*np.sqrt(np.log(t) / self.action_counts)
+            argmax_arg += self.action_value_estimates
+            return np.argmax(argmax_arg)
 
     def update_value_estimates(self, action_result):
         """Updates the action value estimates from experience by averaging
